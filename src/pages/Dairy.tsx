@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { generateReflectionPrompt, moderateContent } from '../services/geminiService';
+import { generateReflectionPrompt } from '../services/geminiService';
 
 const Dairy: React.FC = () => {
     const [prompt, setPrompt] = useState('What are you grateful for today?');
@@ -13,9 +13,7 @@ const Dairy: React.FC = () => {
     const [newContent, setNewContent] = useState('');
     const [isPublic, setIsPublic] = useState(false);
 
-    useEffect(() => {
-        refreshPrompt();
-    }, []);
+
 
     const refreshPrompt = async () => {
         setLoadingPrompt(true);
@@ -37,6 +35,10 @@ const Dairy: React.FC = () => {
         setNewTitle('');
         setNewContent('');
     };
+
+    useEffect(() => {
+        refreshPrompt();
+    }, []);
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-20">

@@ -46,11 +46,11 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       async () => await loginUser(data),
       setIsLoading,
       (res) => {
-        const data = res;
-        setUser(data.user);
-        setToken(data.accessToken);
-        LocalStorage.set("user", data.user);
-        LocalStorage.set("token", data.accessToken);
+        const data = res?.data !== undefined ? res?.data : res;
+        setUser(data?.user);
+        setToken(data?.accessToken);
+        LocalStorage.set("user", data?.user);
+        LocalStorage.set("token", data?.accessToken);
       },
       alert // Display error alerts on request failure
     );

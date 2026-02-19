@@ -8,7 +8,7 @@ export async function moderateContent(
 ): Promise<{ isSafe: boolean; reason?: string }> {
   // Fix: Create a new instance right before making an API call to ensure it always uses the most up-to-date API key.
   // Use process.env.API_KEY directly.
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: "" });
 
   try {
     const response = await ai.models.generateContent({
