@@ -8,6 +8,9 @@ import { loginUser, logoutUser, registerUser } from "../api/auth";
 const AuthContext = createContext<{
   user: UserInterface | null;
   token: string | null;
+  step: "register" | "otp";
+  setStep: (step: "register" | "otp") => void;
+  pendingEmail: string | null;
   login: (data: { username: string; password: string }) => Promise<void>;
   register: (data: {
     email: string;
@@ -21,16 +24,27 @@ const AuthContext = createContext<{
   login: async () => { },
   register: async () => { },
   logout: async () => { },
+  step: "register",
+  setStep: () => { },
+  pendingEmail: null
 });
 
 // Create a hook to access the AuthContext
-const useAuth = () => useContext(AuthContext);
+function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
+}
 
 // Create a component that provides authentication-related data and functions
 const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [step, setStep] = useState<"register" | "otp">('register');
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [user, setUser] = useState<UserInterface | null>(() => {
     const _user = LocalStorage.get("user");
     return _user && _user._id ? _user : null;
@@ -67,6 +81,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setIsLoading,
       () => {
         alert("Account created successfully! Go ahead and login.");
+        setPendingEmail(data?.email);
       },
       alert // Display error alerts on request failure
     );
@@ -88,7 +103,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Provide authentication-related data and functions through the context
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, token }}>
+    <AuthContext.Provider value={{ user, login, register, logout, token, setStep, step, pendingEmail }}>
       {isLoading ? <Loader /> : children} {/* Display a loader while loading */}
     </AuthContext.Provider>
   );
