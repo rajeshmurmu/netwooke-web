@@ -1,8 +1,8 @@
 import { createBrowserRouter, RouterProvider } from 'react-router'
-import { useAuth } from './context/AuthContext'
 import RootLayout from './RootLayout'
 import { Dairy, Feed, Groups, Messages } from './pages'
-import Landing from './pages/Landing'
+import LoginPage from './pages/auth/LoginPage'
+import RegisterPage from './pages/auth/RegisterPage'
 
 
 const router = createBrowserRouter([
@@ -27,18 +27,18 @@ const router = createBrowserRouter([
         element: <Messages />
       }
     ]
+  },
+  {
+    path: "/login",
+    element: <LoginPage />
+  },
+  {
+    path: "/register",
+    element: <RegisterPage />
   }
 ])
 
 function App() {
-  const { token, user } = useAuth();
-
-  if (!token || !user?._id) {
-    return (
-      <Landing />
-    )
-  }
-
   return (
     <RouterProvider router={router} />
   )

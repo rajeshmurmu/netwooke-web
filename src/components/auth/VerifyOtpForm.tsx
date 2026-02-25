@@ -49,7 +49,7 @@ export default function VerifyOtpForm({ email }: VerifyOtpFormProps) {
 
         try {
             verifyOtp(otp);
-            navigate('/login');
+            navigate('/register?step=username&email=' + email);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'OTP verification failed');
         } finally {

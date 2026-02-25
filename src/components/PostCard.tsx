@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router';
 import type { Post, Comment } from '../types';
 import { moderateContent } from '../services/geminiService';
+import { Card } from './ui/card';
 
 interface PostCardProps {
     post: Post;
@@ -125,7 +126,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
     };
 
     return (
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 transition-all hover:border-blue-100 group relative">
+        <Card className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 transition-all hover:border-blue-100 group relative">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                     <Link to={`/profile/${post.authorUsername}`} className="relative group/avatar shrink-0">
@@ -304,8 +305,8 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
             )}
 
             {showShareModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-opacity">
-                    <div className="bg-white rounded-[2rem] w-full max-w-sm shadow-2xl overflow-hidden border border-slate-100 animate-in fade-in zoom-in duration-200">
+                <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-opacity">
+                    <div className="bg-white rounded-4xl w-full max-w-sm shadow-2xl overflow-hidden border border-slate-100 animate-in fade-in zoom-in duration-200">
                         <div className="p-8">
                             <div className="flex justify-between items-start mb-6">
                                 <div>
@@ -355,7 +356,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                     </div>
                 </div>
             )}
-        </div>
+        </Card>
     );
 };
 

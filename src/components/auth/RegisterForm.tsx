@@ -1,9 +1,10 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { useAuth } from '@/context/AuthContext'
 import { Check, Eye, EyeOff, X } from 'lucide-react'
 import React, { useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 
 interface PasswordRequirements {
     length: boolean;
@@ -13,12 +14,10 @@ interface PasswordRequirements {
     special: boolean;
 }
 
-interface RegisterFormProps {
-    nextStep: () => void;
-    register: (data: { username: string; email: string; password: string }) => void
-}
 
-export default function RegisterForm({ nextStep, register }: RegisterFormProps) {
+export default function RegisterForm() {
+    const navigate = useNavigate();
+    const { register } = useAuth();
     const [formData, setFormData] = useState({
         username: '',
         email: '',
@@ -74,7 +73,7 @@ export default function RegisterForm({ nextStep, register }: RegisterFormProps) 
         try {
             await register({ username: formData.username, email: formData.email, password: formData.password });
             console.log('Registration successful');
-            nextStep();
+            navigate("/register?step=verify-otp&email=" + formData.email);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Registration failed');
         } finally {

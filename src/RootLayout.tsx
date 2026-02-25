@@ -1,10 +1,18 @@
-import { BookMarkedIcon, HomeIcon, MessageSquareIcon, ShieldIcon, UsersIcon } from "lucide-react";
+import { BookMarkedIcon, HomeIcon, MessageSquareIcon, UsersIcon } from "lucide-react";
 import { Link, NavLink, Outlet } from "react-router";
 import { useAuth } from "./context/AuthContext";
-import { UserRole } from "./types";
+import Landing from "./pages/Landing";
+import UserProfile from "./components/UserProfile";
 
 export default function RootLayout() {
-    const { user, logout } = useAuth();
+    const { user, token } = useAuth();
+
+    if (!token || !user?._id) {
+        return (
+            <Landing />
+        )
+    }
+
     return (
         <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900">
             <header className="sticky top-0 z-40 bg-white border-b border-slate-200">
@@ -14,7 +22,7 @@ export default function RootLayout() {
                             <Link to="/" className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
                                 N
                             </Link>
-                            <Link to="/" className="text-xl font-bold text-slate-800 tracking-tight hidden sm:block">Network Tube</Link>
+                            <Link to="/" className="text-xl font-bold text-slate-800 tracking-tight hidden sm:block">Netwooke</Link>
                         </div>
 
                         <nav className="hidden md:flex space-x-8">
@@ -25,18 +33,7 @@ export default function RootLayout() {
                         </nav>
 
                         <div className="flex items-center gap-4">
-                            <Link to={`/profile/${user?.username}`} className="flex items-center gap-2 group">
-                                <img src={user?.avatar?.url} className="w-8 h-8 rounded-full border border-slate-200 group-hover:border-blue-300 transition-colors" alt="Profile" />
-                                <span className="hidden sm:inline font-medium text-sm group-hover:text-blue-600 transition-colors">{user?.name}</span>
-                            </Link>
-                            {user?.role === UserRole.MODERATOR && (
-                                <Link to="/moderator" className="p-2 text-slate-500 hover:text-blue-600">
-                                    <ShieldIcon />
-                                </Link>
-                            )}
-                            <button onClick={logout} className="text-sm text-slate-500 hover:text-red-500 font-medium">
-                                Logout
-                            </button>
+                            <UserProfile />
                         </div>
                     </div>
                 </div>

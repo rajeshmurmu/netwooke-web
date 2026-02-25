@@ -1,11 +1,13 @@
 
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import React, { useState } from 'react';
-import AuthModal from '../components/auth/AuthModal';
+import { useNavigate } from 'react-router';
 
 
 const Landing: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'traditional' | 'network'>('network');
-    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const navigate = useNavigate();
 
     return (
         <div className="min-h-screen bg-slate-50 overflow-x-hidden selection:bg-blue-100 selection:text-blue-900">
@@ -14,7 +16,7 @@ const Landing: React.FC = () => {
                 <div className="flex items-center justify-between h-16 max-w-7xl mx-auto">
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-200">N</div>
-                        <span className="text-xl font-black text-slate-800 tracking-tighter uppercase italic">Network Tube</span>
+                        <span className="text-xl font-black text-slate-800 tracking-tighter uppercase italic">Netwooke</span>
                     </div>
                     <div className="hidden md:flex items-center gap-8">
                         <a href="#philosophy" className="text-xs font-black text-slate-400 hover:text-blue-600 uppercase tracking-widest transition-colors">Philosophy</a>
@@ -22,16 +24,13 @@ const Landing: React.FC = () => {
                         <a href="#mentors" className="text-xs font-black text-slate-400 hover:text-blue-600 uppercase tracking-widest transition-colors">Mentors</a>
                     </div>
                     <button
-                        onClick={() => setIsAuthModalOpen(true)}
+                        onClick={() => navigate('/register')}
                         className="bg-slate-900 hover:bg-blue-600 text-white text-xs font-black px-6 py-2.5 rounded-full uppercase tracking-widest transition-all active:scale-95"
                     >
                         Enter The Network
                     </button>
                 </div>
             </nav>
-
-            // Auth Modal
-            <AuthModal showAuthModal={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
 
             {/* Hero Section */}
             <section className="relative pt-40 pb-32 px-6">
@@ -48,13 +47,14 @@ const Landing: React.FC = () => {
                         Most platforms drain your focus. We armor it. Join the elite network where young men trade high-value wisdom and track real-world discipline.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-in fade-in slide-in-from-bottom-16 duration-700 delay-300">
-                        <button
-                            onClick={() => setIsAuthModalOpen(true)}
-                            className="group w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-black py-5 px-14 rounded-2xl transition-all shadow-2xl shadow-blue-200 hover:-translate-y-1 active:scale-95 text-xl flex items-center justify-center gap-3"
+                        <Button
+                            onClick={() => navigate('/register')}
+                            variant={"default"}
+                            className='cursor-pointer'
                         >
                             Start Growing
                             <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-                        </button>
+                        </Button>
                         <div className="flex -space-x-3">
                             {[1, 2, 3, 4].map(i => (
                                 <img key={i} src={`https://picsum.photos/seed/user${i}/100/100`} className="w-12 h-12 rounded-full border-4 border-slate-50 shadow-sm" alt="User" />
@@ -68,7 +68,7 @@ const Landing: React.FC = () => {
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[120%] pointer-events-none opacity-10 select-none overflow-hidden">
                     <div className="absolute top-40 left-10 w-150 h-150 bg-blue-400 rounded-full blur-[150px] animate-pulse"></div>
                     <div className="absolute top-60 right-10 w-100 h-100 bg-indigo-500 rounded-full blur-[120px] animate-pulse delay-700"></div>
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-[400px] font-black text-slate-200 opacity-20 -rotate-12 tracking-tighter">NETWORK</div>
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-[400px] font-black text-slate-200 opacity-20 -rotate-12 tracking-tighter">Netwooke</div>
                 </div>
             </section>
 
@@ -80,8 +80,8 @@ const Landing: React.FC = () => {
                         <h3 className="text-4xl font-black text-slate-900 tracking-tight">Decide Your Environment</h3>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-2 rounded-[3rem] border border-slate-100 shadow-inner">
-                        <button
+                    <Card className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-2 rounded-[3rem] border border-slate-100 shadow-inner">
+                        <Card
                             onClick={() => setActiveTab('traditional')}
                             className={`p-10 rounded-[2.5rem] transition-all text-left ${activeTab === 'traditional' ? 'bg-red-50 border border-red-100 shadow-lg' : 'opacity-40 hover:opacity-100'}`}
                         >
@@ -101,13 +101,13 @@ const Landing: React.FC = () => {
                                     <span className="text-red-500">✕</span> Data harvesting focus
                                 </li>
                             </ul>
-                        </button>
+                        </Card>
 
-                        <button
+                        <Card
                             onClick={() => setActiveTab('network')}
                             className={`p-10 rounded-[2.5rem] transition-all text-left ${activeTab === 'network' ? 'bg-blue-600 border border-blue-400 shadow-2xl shadow-blue-200 text-white' : 'opacity-40 hover:opacity-100'}`}
                         >
-                            <div className="text-blue-300 font-black text-xs uppercase tracking-widest mb-4">The Network Tube Way</div>
+                            <div className="text-blue-300 font-black text-xs uppercase tracking-widest mb-4">The Netwooke Way</div>
                             <h4 className="text-2xl font-black mb-6">Intentional Transmission</h4>
                             <ul className="space-y-4">
                                 <li className="flex items-center gap-3 text-sm">
@@ -123,8 +123,8 @@ const Landing: React.FC = () => {
                                     <span className="text-blue-300">✓</span> AI-moderated sanctuary
                                 </li>
                             </ul>
-                        </button>
-                    </div>
+                        </Card>
+                    </Card>
                 </div>
             </section>
 
@@ -132,7 +132,7 @@ const Landing: React.FC = () => {
             <section className="py-32 px-6">
                 <div className="max-w-7xl mx-auto">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                        <div className="group bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all">
+                        <Card className="group bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all">
                             <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white mb-8 group-hover:scale-110 transition-transform">
                                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                             </div>
@@ -141,9 +141,9 @@ const Landing: React.FC = () => {
                             <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
                                 <div className="bg-blue-600 h-full w-3/4 animate-pulse"></div>
                             </div>
-                        </div>
+                        </Card>
 
-                        <div className="group bg-slate-900 p-10 rounded-[3rem] border border-slate-800 shadow-2xl text-white">
+                        <Card className="group bg-slate-900 p-10 rounded-[3rem] border border-slate-800 shadow-2xl text-white">
                             <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-slate-900 mb-8 group-hover:rotate-12 transition-transform">
                                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
                             </div>
@@ -153,9 +153,9 @@ const Landing: React.FC = () => {
                                 <span className="text-[10px] font-black border border-white/20 px-3 py-1 rounded-full uppercase">150+ Paths</span>
                                 <span className="text-[10px] font-black border border-white/20 px-3 py-1 rounded-full uppercase">Verified</span>
                             </div>
-                        </div>
+                        </Card>
 
-                        <div className="group bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all">
+                        <Card className="group bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all">
                             <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 mb-8 group-hover:scale-110 transition-transform">
                                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                             </div>
@@ -164,7 +164,7 @@ const Landing: React.FC = () => {
                             <div className="flex -space-x-2">
                                 {[1, 2, 3, 4, 5].map(i => <div key={i} className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white"></div>)}
                             </div>
-                        </div>
+                        </Card>
                     </div>
                 </div>
             </section>
@@ -237,14 +237,14 @@ const Landing: React.FC = () => {
                         IS <span className="text-blue-600">MANDATORY.</span>
                     </h2>
                     <p className="text-slate-400 text-lg mb-12 max-w-xl mx-auto">
-                        Network Tube isn't for everyone. It's for the few who want to trade distraction for discipline. Are you one of them?
+                        Network with the best in the field. The netwooke isn't for everyone. It's for the few who want to trade distraction for discipline. Are you one of them?
                     </p>
-                    <button
-                        onClick={() => setIsAuthModalOpen(true)}
-                        className="bg-white text-slate-900 font-black py-6 px-20 rounded-2xl transition-all shadow-2xl hover:scale-105 active:scale-95 text-2xl"
+                    <Button
+                        onClick={() => navigate('/register')}
+                        className="cursor-pointer   text-white text-xs font-black px-6 py-2.5 rounded-full uppercase tracking-widest transition-all active:scale-95"
                     >
                         Claim Your Spot
-                    </button>
+                    </Button>
 
                     <div className="mt-20 flex flex-wrap justify-center gap-10 opacity-20 filter grayscale">
                         <span className="text-xs font-black uppercase tracking-[0.5em]">Physical</span>
@@ -254,7 +254,7 @@ const Landing: React.FC = () => {
                     </div>
 
                     <div className="mt-20 pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div className="text-[10px] font-black text-white/30 uppercase tracking-widest">© 2024 Network Tube • The Discipline Economy</div>
+                        <div className="text-[10px] font-black text-white/30 uppercase tracking-widest">$copy {new Date().getFullYear()} - The Discipline Economy</div>
                         <div className="flex gap-6">
                             <a href="#" className="text-[10px] font-black text-white/30 hover:text-white uppercase tracking-widest">Privacy Protocol</a>
                             <a href="#" className="text-[10px] font-black text-white/30 hover:text-white uppercase tracking-widest">Terms of Engagement</a>
