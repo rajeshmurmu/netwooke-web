@@ -1,45 +1,49 @@
 
 import React, { useMemo } from 'react';
 import { useParams } from 'react-router';
-import type { User } from '../types';
 import { MOCK_USERS } from "../constants";
+import useUserStore from '@/store/userStore';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 
-interface ProfileProps {
-    currentUser: User;
-}
 
-const Profile: React.FC<ProfileProps> = ({ currentUser }) => {
+const Profile = () => {
+    const { user: currentUser } = useUserStore(state => state);
     const { username } = useParams<{ username: string }>();
 
     const displayedUser = useMemo(() => {
         if (!username) return currentUser;
+        // TODO: find user by username from API
         return MOCK_USERS.find(u => u.username === username) || currentUser;
     }, [username, currentUser]);
 
-    const isOwnProfile = currentUser.username === displayedUser.username;
+    const isOwnProfile = currentUser?.username === displayedUser?.username;
 
     return (
         <div className="max-w-4xl mx-auto space-y-8 pb-20 animate-in fade-in duration-500">
             <div className="bg-white rounded-4xl p-6 md:p-10 shadow-sm border border-slate-100 flex flex-col md:flex-row items-center gap-10 relative overflow-hidden">
-                {/* Subtle background pattern */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full -mr-32 -mt-32 opacity-50 pointer-events-none"></div>
 
                 <div className="relative group shrink-0">
-                    <img src={displayedUser.avatar} className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] shadow-2xl shadow-blue-100 border-4 border-white transition-transform group-hover:scale-105 duration-500" alt={displayedUser.name} />
-                    <div className="absolute -bottom-1 -right-1 bg-green-500 w-6 h-6 md:w-8 md:h-8 rounded-full border-4 border-white shadow-lg" />
+                    <Avatar className='w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] shadow-2xl shadow-blue-100 border-4 border-white transition-transform group-hover:scale-105 duration-500'>
+                        <AvatarImage src={displayedUser?.avatar} />
+                        <AvatarFallback className="bg-primary/20 text-primary text-4xl md:text-8xl font-semibold">
+                            {displayedUser?.name?.[0].toUpperCase()}
+                        </AvatarFallback>
+                    </Avatar>
+                    <div className="absolute -bottom-1 md:bottom-2 right-6 bg-green-500 w-6 h-6 md:w-6 md:h-6 rounded-full border-4 border-white shadow-lg" />
                 </div>
 
                 <div className="flex-1 text-center md:text-left relative z-10">
                     <div className="flex flex-col md:flex-row md:items-center gap-3 mb-3">
-                        <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">{displayedUser.name}</h2>
-                        {displayedUser.isMentor && (
+                        <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">{displayedUser?.name}</h2>
+                        {displayedUser?.isMentor && (
                             <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-200 inline-block w-fit mx-auto md:mx-0">
                                 Mentor
                             </span>
                         )}
                     </div>
-                    <span className="text-blue-600 font-bold text-sm block mb-3">@{displayedUser.username} • Building since {displayedUser.joinedAt}</span>
-                    <p className="text-slate-600 mb-8 max-w-lg leading-relaxed">{displayedUser.bio}</p>
+                    <span className="text-blue-600 font-bold text-sm block mb-3">@{displayedUser?.username} | Building since {new Date(displayedUser?.createdAt || 0).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                    <p className="text-slate-600 mb-8 max-w-lg leading-relaxed">{displayedUser?.bio}</p>
 
                     <div className="flex flex-wrap gap-4 justify-center md:justify-start">
                         <StatBox label="Followers" value="124" />
@@ -51,12 +55,12 @@ const Profile: React.FC<ProfileProps> = ({ currentUser }) => {
                 <div className="flex flex-col gap-3 w-full md:w-auto">
                     {isOwnProfile ? (
                         <>
-                            <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-2xl text-sm font-bold shadow-xl shadow-blue-100 transition-all active:scale-95">
+                            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-2xl text-sm font-bold shadow-xl shadow-blue-100 transition-all active:scale-95">
                                 Edit Growth Path
-                            </button>
-                            <button className="bg-slate-50 hover:bg-slate-100 text-slate-600 px-8 py-3 rounded-2xl text-sm font-bold border border-slate-100 transition-all">
+                            </Button>
+                            <Button className="bg-slate-50 hover:bg-slate-100 text-slate-600 px-8 py-3 rounded-2xl text-sm font-bold border border-slate-100 transition-all">
                                 Settings
-                            </button>
+                            </Button>
                         </>
                     ) : (
                         <>
@@ -76,14 +80,14 @@ const Profile: React.FC<ProfileProps> = ({ currentUser }) => {
                     <div className="flex justify-between items-center mb-8">
                         <h3 className="text-2xl font-black text-slate-800 tracking-tight">Active Growth Goals</h3>
                         {isOwnProfile && (
-                            <button className="bg-blue-50 text-blue-600 text-xs font-black px-4 py-2 rounded-xl hover:bg-blue-100 transition-colors uppercase tracking-widest">
+                            <Button className="bg-blue-50 text-blue-600 text-xs font-black px-4 py-2 rounded-xl hover:bg-blue-100 transition-colors uppercase tracking-widest">
                                 + New Goal
-                            </button>
+                            </Button>
                         )}
                     </div>
 
                     <div className="grid gap-6">
-                        {displayedUser.goals.length > 0 ? (
+                        {displayedUser?.goals && displayedUser?.goals?.length > 0 ? (
                             displayedUser.goals.map(goal => (
                                 <div key={goal.id} className="p-6 rounded-3xl bg-slate-50 border border-slate-100 group transition-all hover:bg-white hover:shadow-lg hover:shadow-slate-100 hover:border-blue-100">
                                     <div className="flex items-center justify-between mb-4">
@@ -116,11 +120,13 @@ const Profile: React.FC<ProfileProps> = ({ currentUser }) => {
                     </div>
                 </div>
 
+
+
                 <div className="space-y-8">
                     <div className="bg-white rounded-4xl p-8 border border-slate-100 shadow-sm">
                         <h3 className="text-xl font-black text-slate-800 mb-6 tracking-tight uppercase">Identity Badges</h3>
                         <div className="grid grid-cols-2 gap-4">
-                            {displayedUser.badges.map(badge => (
+                            {displayedUser?.badges && displayedUser?.badges.map(badge => (
                                 <div key={badge.id} className="flex flex-col items-center p-6 rounded-3xl bg-linear-to-b from-slate-50 to-white border border-slate-100 text-center transition-transform hover:scale-105 cursor-pointer">
                                     <span className="text-4xl mb-3 filter drop-shadow-sm">{badge.icon}</span>
                                     <span className="text-[11px] font-black text-slate-700 uppercase leading-tight">{badge.name}</span>

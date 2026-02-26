@@ -5,14 +5,14 @@ export const UserRole = {
 } as const;
 
 export interface User {
-  id: string;
+  _id: string;
   name: string;
   username: string;
   avatar: string;
   role: keyof typeof UserRole;
   bio: string;
   goals: Goal[];
-  joinedAt: string;
+  createdAt: string;
   badges: Badge[];
   isMentor?: boolean;
   specialization?: string;

@@ -1,26 +1,18 @@
-import { useNavigate } from "react-router";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import { useNavigate, useSearchParams } from "react-router";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card";
 import { User } from "lucide-react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { useState } from "react";
+import { authClient } from "@/services/authClient";
+import toast from "react-hot-toast";
 
 export default function UsernameForm() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [username, setUsername] = useState('');
-    const [displayName, setDisplayName] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-
-    const completeUsernameSetup = async (username: string, displayName: string) => {
-        await fetch('/api/auth/username', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ username, displayName }),
-        });
-    };
 
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -29,7 +21,13 @@ export default function UsernameForm() {
         setLoading(true);
 
         try {
-            await completeUsernameSetup(username, displayName);
+            const res = await authClient.setUsername({ username, email: searchParams.get('email') || '' });
+            const data = res?.data !== undefined ? res?.data : res;
+            if (data?.success) {
+                toast.success(data?.message || "Username set successfully");
+                // TODO: here we can login user automatically after username set or we can redirect if next step is exist or we can redirect to home page
+                navigate('/register?step=username&email-verified=true&email=' + searchParams.get('email'), { replace: true });
+            }
             navigate('/login');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to set username');
@@ -38,7 +36,7 @@ export default function UsernameForm() {
         }
     };
 
-    const isFormValid = username.trim().length > 0 && displayName.trim().length > 0;
+    const isFormValid = username.trim().length > 0
 
     return (
 
@@ -51,11 +49,12 @@ export default function UsernameForm() {
                 </div>
                 <CardTitle className="text-2xl text-center">Complete Your Profile</CardTitle>
                 <CardDescription className="text-center">
-                    Set your username and display name to get started
+                    <p>Set your username and display name to get started</p>
+                    <p>By default we will assign you a random username</p>
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form className="space-y-4">
                     <div className="space-y-2">
                         <label htmlFor="username" className="text-sm font-medium text-foreground">
                             Username
@@ -69,27 +68,9 @@ export default function UsernameForm() {
                             disabled={loading}
                             className="bg-input border-border"
                         />
-                        <p className="text-xs text-muted-foreground">
-                            Your unique identifier on Network Tube
-                        </p>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label htmlFor="displayName" className="text-sm font-medium text-foreground">
-                            Display Name
-                        </label>
-                        <Input
-                            id="displayName"
-                            type="text"
-                            placeholder="Your display name"
-                            value={displayName}
-                            onChange={(e) => setDisplayName(e.target.value)}
-                            disabled={loading}
-                            className="bg-input border-border"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                            How your name appears to others
-                        </p>
+                        <div>
+                            <p className="text-xs text-muted-foreground">Your username is unique and cannot be changed</p>
+                        </div>
                     </div>
 
                     {error && (
@@ -97,16 +78,28 @@ export default function UsernameForm() {
                             <p className="text-sm text-destructive">{error}</p>
                         </div>
                     )}
+                </form>
+            </CardContent>
+            <CardFooter>
+                <div className="w-full flex justify-between">
+                    <Button
+                        // TODO: here we can to next step or we can redirect to home page if next step is not exist or user is already logged in
+                        onClick={() => navigate("/login")}
+                        className="cursor-pointer"
+                    >
+                        skip
+                    </Button>
 
                     <Button
                         type="submit"
                         disabled={loading || !isFormValid}
-                        className="w-full"
+                        onClick={handleSubmit}
+                        className="cursor-pointer"
                     >
-                        {loading ? 'Setting up...' : 'Continue to Network Tube'}
+                        {loading ? 'Setting up...' : 'Submit'}
                     </Button>
-                </form>
-            </CardContent>
+                </div>
+            </CardFooter>
         </Card>
     );
 }

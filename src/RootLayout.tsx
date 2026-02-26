@@ -1,13 +1,13 @@
 import { BookMarkedIcon, HomeIcon, MessageSquareIcon, UsersIcon } from "lucide-react";
 import { Link, NavLink, Outlet } from "react-router";
-import { useAuth } from "./context/AuthContext";
 import Landing from "./pages/Landing";
 import UserProfile from "./components/UserProfile";
+import useUserStore from "./store/userStore";
 
 export default function RootLayout() {
-    const { user, token } = useAuth();
+    const { user, accessToken } = useUserStore((state) => state);
 
-    if (!token || !user?._id) {
+    if (!accessToken || !user?._id) {
         return (
             <Landing />
         )

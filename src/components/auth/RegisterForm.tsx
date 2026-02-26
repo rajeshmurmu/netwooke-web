@@ -1,30 +1,31 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { useAuth } from '@/context/AuthContext'
 import { Check, Eye, EyeOff, X } from 'lucide-react'
-import React, { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-
-interface PasswordRequirements {
-    length: boolean;
-    uppercase: boolean;
-    lowercase: boolean;
-    number: boolean;
-    special: boolean;
-}
-
+import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
+import { zodResolver } from "@hookform/resolvers/zod";
+import { registerSchema, type RegisterInput } from '@/lib/zod/authSchema'
+import type { PasswordRequirements } from '@/interfaces/auth'
+import { authClient } from '@/services/authClient'
+import toast from 'react-hot-toast'
+import { AxiosError } from 'axios'
+import { isBrowser } from '@/utils'
 
 export default function RegisterForm() {
     const navigate = useNavigate();
-    const { register } = useAuth();
-    const [formData, setFormData] = useState({
-        username: '',
-        email: '',
-        displayName: '',
-        password: '',
-        confirmPassword: '',
+
+    const { handleSubmit, watch, control, formState: { errors } } = useForm({
+        resolver: zodResolver(registerSchema),
+        defaultValues: {
+            name: '',
+            email: '',
+            password: '',
+            confirmPassword: '',
+        },
     });
+
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [passwordReqs, setPasswordReqs] = useState<PasswordRequirements>({
@@ -37,7 +38,6 @@ export default function RegisterForm() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-
     const validatePassword = (pass: string) => {
         setPasswordReqs({
             length: pass.length >= 8,
@@ -48,33 +48,53 @@ export default function RegisterForm() {
         });
     };
 
-    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const pass = e.target.value;
-        setFormData({ ...formData, password: pass });
-        validatePassword(pass);
-    };
+    const password = watch("password");
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
+    useEffect(() => {
+        validatePassword(password);
+    }, [password]);
 
-        if (formData.password !== formData.confirmPassword) {
-            setError('Passwords do not match');
-            return;
-        }
-
-        if (!Object.values(passwordReqs).every(Boolean)) {
-            setError('Password does not meet requirements');
-            return;
-        }
-
-        setLoading(true);
-
+    const onSubmit: SubmitHandler<RegisterInput> = async (inputData) => {
         try {
-            await register({ username: formData.username, email: formData.email, password: formData.password });
-            console.log('Registration successful');
-            navigate("/register?step=verify-otp&email=" + formData.email);
+            setError('');
+            setLoading(true);
+
+            if (inputData.password !== inputData.confirmPassword) {
+                setError('Passwords do not match');
+                return;
+            }
+
+            if (!Object.values(passwordReqs).every(Boolean)) {
+                setError('Password does not meet requirements');
+                return;
+            }
+
+
+            const res = await authClient.register(inputData);
+            const data = res?.data !== undefined ? res?.data : res;
+            if (data?.success) {
+                toast.success(data?.message || "OTP sent to your email");
+                navigate("/register?step=verify-otp&email=" + inputData.email);
+            }
+
         } catch (err) {
+            if (err instanceof AxiosError) {
+                if (err?.response)
+                    if ([401, 403].includes(err?.response.status)) {
+                        // Handle error cases, including unauthorized and forbidden cases
+                        localStorage.clear(); // Clear local storage on authentication issues
+                        if (isBrowser) window.location.href = "/login"; // Redirect to login page
+                    }
+
+                if (err?.response?.status === 409) {
+                    toast.error(err?.response?.data?.message || "Email already exists, Please login");
+                    setTimeout(() => {
+                        if (isBrowser) navigate("/login");
+                    }, 2000);
+                    return
+                }
+                toast.error(err?.response?.data?.message || "Something went wrong");
+            }
             setError(err instanceof Error ? err.message : 'Registration failed');
         } finally {
             setLoading(false);
@@ -85,89 +105,82 @@ export default function RegisterForm() {
     return (
         <Card className="w-full max-w-md border-primary/10 shadow-lg">
             <CardHeader className="space-y-2 text-center">
-                <CardTitle className="text-3xl font-bold">Join Network Tube</CardTitle>
+                <CardTitle className="text-3xl font-bold">Join Netwooke</CardTitle>
                 <CardDescription>Create an account to get started</CardDescription>
             </CardHeader>
             <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                     {error && (
                         <div className="p-3 bg-destructive/10 text-destructive rounded-md text-sm">
                             {error}
                         </div>
                     )}
 
-                    <div className="space-y-2">
-                        <label htmlFor="username" className="text-sm font-medium text-foreground">
-                            Username
-                        </label>
-                        <Input
-                            id="username"
-                            type="text"
-                            placeholder="Choose a username"
-                            value={formData.username}
-                            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                            required
-                            disabled={loading}
-                            className="bg-input border-primary/20 focus:border-accent"
-                        />
+                    <div>
+                        <Controller name='name' control={control} render={({ field }) => (
+                            <div className="space-y-2">
+                                <label htmlFor="name" className="text-sm font-medium text-foreground">
+                                    Name
+                                </label>
+                                <Input
+                                    id='name'
+                                    {...field}
+                                    placeholder='Enter your full name'
+                                    className="bg-input border-primary/20 focus:border-accent"
+
+                                />
+                            </div>
+                        )} />
+                        {errors.name && <p className="text-destructive text-xs">{errors.name.message}</p>}
                     </div>
 
-                    <div className="space-y-2">
-                        <label htmlFor="email" className="text-sm font-medium text-foreground">
-                            Email
-                        </label>
-                        <Input
-                            id="email"
-                            type="email"
-                            placeholder="Enter your email"
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            required
-                            disabled={loading}
-                            className="bg-input border-primary/20 focus:border-accent"
-                        />
+                    <div>
+                        <Controller name='email' control={control} render={({ field }) => (
+                            <div className="space-y-2">
+                                <label htmlFor="email" className="text-sm font-medium text-foreground">
+                                    Email
+                                </label>
+                                <Input
+                                    id='email'
+                                    {...field}
+                                    placeholder='Enter your email'
+                                    className="bg-input border-primary/20 focus:border-accent"
+
+                                />
+                            </div>
+                        )} />
+                        {errors.email && <p className="text-destructive text-xs">{errors.email.message}</p>}
                     </div>
 
-                    <div className="space-y-2">
-                        <label htmlFor="displayName" className="text-sm font-medium text-foreground">
-                            Display Name
-                        </label>
-                        <Input
-                            id="displayName"
-                            type="text"
-                            placeholder="Your display name"
-                            value={formData.displayName}
-                            onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                            disabled={loading}
-                            className="bg-input border-primary/20 focus:border-accent"
-                        />
-                    </div>
 
-                    <div className="space-y-2">
-                        <label htmlFor="password" className="text-sm font-medium text-foreground">
-                            Password
-                        </label>
-                        <div className="relative">
-                            <Input
-                                id="password"
-                                type={showPassword ? 'text' : 'password'}
-                                placeholder="Create a strong password"
-                                value={formData.password}
-                                onChange={handlePasswordChange}
-                                required
-                                disabled={loading}
-                                className="bg-input border-primary/20 focus:border-accent pr-10"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-                                disabled={loading}
-                            >
-                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                            </button>
-                        </div>
-                        {formData.password && (
+                    <div>
+                        <Controller name='password' control={control} render={({ field }) => (
+                            <div className="space-y-2">
+                                <label htmlFor="password" className="text-sm font-medium text-foreground">
+                                    Password
+                                </label>
+                                <div className="relative">
+                                    <Input
+                                        id="password"
+                                        type={showPassword ? 'text' : 'password'}
+                                        placeholder="Create a strong password"
+                                        {...field}
+                                        className="bg-input border-primary/20 focus:border-accent pr-10"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                                        disabled={loading}
+                                    >
+                                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                        />
+
+                        {password && (
                             <div className="space-y-1 mt-2">
                                 <div className="flex items-center gap-2 text-xs">
                                     <div
@@ -198,37 +211,43 @@ export default function RegisterForm() {
                                 </ul>
                             </div>
                         )}
+
+                        {errors.password && <span className="text-destructive text-xs">{errors.password.message}</span>}
+
                     </div>
 
-                    <div className="space-y-2">
-                        <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
-                            Confirm Password
-                        </label>
-                        <div className="relative">
-                            <Input
-                                id="confirmPassword"
-                                type={showConfirmPassword ? 'text' : 'password'}
-                                placeholder="Confirm your password"
-                                value={formData.confirmPassword}
-                                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                required
-                                disabled={loading}
-                                className="bg-input border-primary/20 focus:border-accent pr-10"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-                                disabled={loading}
-                            >
-                                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                            </button>
-                        </div>
+                    <div>
+                        <Controller name='confirmPassword' control={control} render={({ field }) => (
+                            <div className="space-y-2">
+                                <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
+                                    Confirm Password
+                                </label>
+                                <div className="relative">
+                                    <Input
+                                        id="confirmPassword"
+                                        type={showConfirmPassword ? 'text' : 'password'}
+                                        placeholder="Confirm your password"
+                                        {...field}
+                                        className="bg-input border-primary/20 focus:border-accent pr-10"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                                        disabled={loading}
+                                    >
+                                        {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                    </button>
+                                </div>
+                            </div>
+                        )} />
+
+                        {errors.confirmPassword && <span className="text-destructive text-xs">{errors.confirmPassword.message}</span>}
                     </div>
 
                     <Button
                         type="submit"
-                        disabled={loading || !formData.username || !formData.email || !formData.password || !formData.confirmPassword}
+                        disabled={loading}
                         className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
                     >
                         {loading ? 'Creating account...' : 'Create Account'}

@@ -4,6 +4,10 @@ import { useNavigate } from 'react-router';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { Clock } from 'lucide-react';
+import { authClient } from '@/services/authClient';
+import { AxiosError } from 'axios';
+import { isBrowser } from '@/utils';
+import toast from 'react-hot-toast';
 
 interface VerifyOtpFormProps {
     email: string
@@ -17,10 +21,40 @@ export default function VerifyOtpForm({ email }: VerifyOtpFormProps) {
     const [timeLeft, setTimeLeft] = useState(60);
     const [canResend, setCanResend] = useState(false);
 
-    const verifyOtp = (otp: string) => {
-        console.log(otp)
+    const verifyOtp = async (otp: string) => {
+        try {
+            setLoading(true);
+            const res = await authClient.verifyOtp(otp)
+
+            const data = res?.data !== undefined ? res?.data : res;
+            console.log(data);
+            if (data?.success) {
+                // TODO: here we can login user automatically after otp verification 
+                // await login(data?.data?.user);
+                toast.success(data?.message || "Accout verified successfully");
+                navigate(`/register?step=username&email-verified=true&email=${email}`, { replace: true });
+            }
+
+        } catch (err) {
+            if (err instanceof AxiosError) {
+                if (err?.response)
+                    if ([401, 403].includes(err?.response.status)) {
+                        // Handle error cases, including unauthorized and forbidden cases
+                        localStorage.clear(); // Clear local storage on authentication issues
+                        if (isBrowser) navigate('/login', { replace: true }) // Redirect to login page
+                    }
+
+                if (err?.response?.status === 400) {
+                    toast.error(err?.response?.data?.message || "Invalid OTP");
+                }
+                toast.error(err?.response?.data?.message || "Something went wrong");
+            }
+            setError(err instanceof Error ? err.message : 'OTP verification failed');
+        } finally {
+            setLoading(false);
+        }
     }
-    const resendOtp = () => { }
+    const resendOtp = async () => { }
 
     useEffect(() => {
         if (timeLeft > 0) {
@@ -36,26 +70,7 @@ export default function VerifyOtpForm({ email }: VerifyOtpFormProps) {
         setOtp(value);
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
 
-        if (otp.length !== 6) {
-            setError('Please enter a 6-digit OTP');
-            setLoading(false);
-            return;
-        }
-
-        try {
-            verifyOtp(otp);
-            navigate('/register?step=username&email=' + email);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'OTP verification failed');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleResend = async () => {
         setError('');
@@ -76,7 +91,7 @@ export default function VerifyOtpForm({ email }: VerifyOtpFormProps) {
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={(e) => { e.preventDefault(); verifyOtp(otp) }} className="space-y-4">
                     {error && (
                         <div className="p-3 bg-destructive/10 text-destructive rounded-md text-sm">
                             {error}

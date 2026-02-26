@@ -58,11 +58,16 @@ export const requestHandler = async (
   } catch (error: unknown | AxiosError) {
     if (error instanceof AxiosError) {
       if (error?.response)
-        if ([401, 403].includes(error?.response.data?.statusCode)) {
+        if ([401, 403].includes(error?.response.status)) {
           // Handle error cases, including unauthorized and forbidden cases
           localStorage.clear(); // Clear local storage on authentication issues
           if (isBrowser) window.location.href = "/login"; // Redirect to login page
         }
+
+      if (error?.response?.status === 409) {
+        onError(error?.response?.data?.message);
+        if (isBrowser) window.location.href = "/login";
+      }
       onError(error?.response?.data?.message || "Something went wrong");
     }
   } finally {

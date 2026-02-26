@@ -1,32 +1,28 @@
 import { createContext, useContext, useState } from "react";
-import type { UserInterface } from "../interfaces/user";
 import Loader from "../components/Loader";
-import { LocalStorage, requestHandler } from "../utils";
-import { loginUser, logoutUser, registerUser } from "../api/auth";
+import { isBrowser, LocalStorage } from "../utils";
+import { authClient } from "../services/authClient";
+import toast from "react-hot-toast";
+import { AxiosError } from "axios";
+import type { RegisterInput } from "@/lib/zod/authSchema";
+
+interface IAuthContext {
+  user: RegisterInput | null;
+  register: (credentials: RegisterInput) => Promise<void>;
+  step: "register" | "verify-otp" | "username"
+  setStep: (step: "register" | "verify-otp" | "username") => void
+  setUser: (user: RegisterInput | null) => void
+  setIsLoading: (isLoading: boolean) => void
+}
 
 // Create a context to manage authentication-related data and functions
-const AuthContext = createContext<{
-  user: UserInterface | null;
-  token: string | null;
-  step: "register" | "otp";
-  setStep: (step: "register" | "otp") => void;
-  pendingEmail: string | null;
-  login: (data: { username: string; password: string }) => Promise<void>;
-  register: (data: {
-    email: string;
-    username: string;
-    password: string;
-  }) => Promise<void>;
-  logout: () => Promise<void>;
-}>({
+const AuthContext = createContext<IAuthContext>({
   user: null,
-  token: null,
-  login: async () => { },
-  register: async () => { },
-  logout: async () => { },
   step: "register",
   setStep: () => { },
-  pendingEmail: null
+  register: async () => { },
+  setUser: () => { },
+  setIsLoading: () => { }
 });
 
 // Create a hook to access the AuthContext
@@ -43,72 +39,58 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [step, setStep] = useState<"register" | "otp">('register');
-  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
-  const [user, setUser] = useState<UserInterface | null>(() => {
+  const [user, setUser] = useState<RegisterInput | null>(() => {
     const _user = LocalStorage.get("user");
     return _user && _user._id ? _user : null;
   });
-  const [token, setToken] = useState<string | null>(() => {
-    const _token = LocalStorage.get("token");
-    return _token ? _token : null;
-  });
+  const [step, setStep] = useState<"register" | "verify-otp" | "username">("register");
 
-  // Function to handle user login
-  const login = async (data: { username: string; password: string }) => {
-    await requestHandler(
-      async () => await loginUser(data),
-      setIsLoading,
-      (res) => {
-        const data = res?.data !== undefined ? res?.data : res;
-        setUser(data?.user);
-        setToken(data?.accessToken);
-        LocalStorage.set("user", data?.user);
-        LocalStorage.set("token", data?.accessToken);
-      },
-      alert // Display error alerts on request failure
-    );
-  };
 
   // Function to handle user registration
-  const register = async (data: {
+  const register = async (userCredentials: {
     email: string;
-    username: string;
+    name: string;
     password: string;
+    confirmPassword: string;
   }) => {
-    await requestHandler(
-      async () => await registerUser(data),
-      setIsLoading,
-      () => {
-        alert("Account created successfully! Go ahead and login.");
-        setPendingEmail(data?.email);
-      },
-      alert // Display error alerts on request failure
-    );
-  };
+    try {
+      const res = await authClient.register(userCredentials);
+      const data = res?.data !== undefined ? res?.data : res;
 
-  // Function to handle user logout
-  const logout = async () => {
-    await requestHandler(
-      async () => await logoutUser(),
-      setIsLoading,
-      () => {
-        setUser(null);
-        setToken(null);
-        LocalStorage.clear(); // Clear local storage on logout
-      },
-      alert // Display error alerts on request failure
-    );
+      if (data?.success) {
+        toast.success(data?.message || "OTP sent to your email");
+        window.location.href = ("/register?step=verify-otp&email=" + data.email);
+      }
+
+
+      toast.success(data?.message || "OTP sent to your email");
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        if (error?.response)
+          if ([401, 403].includes(error?.response.status)) {
+            // Handle error cases, including unauthorized and forbidden cases
+            localStorage.clear(); // Clear local storage on authentication issues
+            if (isBrowser) window.location.href = "/login"; // Redirect to login page
+          }
+
+        if (error?.response?.status === 409) {
+          if (isBrowser) window.location.href = "/login";
+        }
+        toast.error(error?.response?.data?.message || "Something went wrong");
+      }
+    }
   };
 
   // Provide authentication-related data and functions through the context
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, token, setStep, step, pendingEmail }}>
+    <AuthContext.Provider value={{ user, register, step, setStep, setUser, setIsLoading }}>
       {isLoading ? <Loader /> : children} {/* Display a loader while loading */}
     </AuthContext.Provider>
   );
 
 };
+
+
 // Export the context, provider component, and custom hook
 // eslint-disable-next-line react-refresh/only-export-components
 export { AuthContext, AuthProvider, useAuth };

@@ -1,6 +1,6 @@
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import RootLayout from './RootLayout'
-import { Dairy, Feed, Groups, Messages } from './pages'
+import { Dairy, Feed, Groups, Messages, Profile } from './pages'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
 
@@ -25,6 +25,10 @@ const router = createBrowserRouter([
       {
         path: '/messages',
         element: <Messages />
+      },
+      {
+        path: '/profile/:username',
+        element: <Profile />
       }
     ]
   },
