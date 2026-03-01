@@ -39,7 +39,7 @@ export default function LoginPage() {
 
             const res = await authClient.login(inputData);
             toast.success(res.data?.message || "User logged in successfully");
-            login(res.data?.user, res.data?.accessToken);
+            login(res.data?.user, res.data?.accessToken, res.data?.refreshToken);
 
         } catch (err) {
             if (err instanceof AxiosError) {

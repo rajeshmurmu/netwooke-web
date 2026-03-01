@@ -21,13 +21,14 @@ export class AxiosClient {
       (response) => response,
       async (error) => {
         const originalRequest = error.config;
-        if (error.response.status === 401 && originalRequest._retry !== true) {
+        if (error.response.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true;
           try {
             // Attempt to refresh the access token
-            const token = await this.refreshToken();
-            useUserStore.getState().setAccessToken(token || "");
-            originalRequest.headers["Authorization"] = `Bearer ${token}`;
+            const { accessToken, refreshToken } = await this.refreshToken();
+            useUserStore.getState().setAccessToken(accessToken);
+            useUserStore.getState().setRefreshToken(refreshToken);
+            originalRequest.headers["Authorization"] = `Bearer ${accessToken}`;
             return this.axiosInstance.request(originalRequest);
           } catch (error) {
             // Refresh token expired, handle the error
@@ -46,12 +47,15 @@ export class AxiosClient {
     try {
       const res = await this.axiosInstance.get("/auth/refresh-token", {
         headers: {
-          Authorization: `Bearer ${this.accessToken}`,
+          Authorization: `Bearer ${useUserStore.getState().refreshToken}`,
         },
       });
       this.accessToken = res.data?.data?.accessToken;
       console.log("🔐 token refreshed");
-      return this.accessToken;
+      return {
+        accessToken: res.data?.data?.accessToken,
+        refreshToken: res.data?.data?.refreshToken,
+      };
     } catch (error) {
       // if the refresh token fails, log out the user
       useUserStore.getState().logout();
