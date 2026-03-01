@@ -1,4 +1,4 @@
-import { LocalStorage } from "@/utils";
+import useUserStore from "@/store/userStore";
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
@@ -12,11 +12,11 @@ export class AxiosClient {
     withCredentials: true,
   });
 
-  private token: string | null;
+  private accessToken: string | null;
 
   constructor() {
-    this.token = LocalStorage.get("token");
-
+    this.accessToken = useUserStore.getState().accessToken;
+    // console.log("🔐 token", this.token);
     this.axiosInstance.interceptors.response.use(
       (response) => response,
       async (error) => {
@@ -26,12 +26,12 @@ export class AxiosClient {
           try {
             // Attempt to refresh the access token
             const token = await this.refreshToken();
-            LocalStorage.set("token", token!);
+            useUserStore.getState().setAccessToken(token || "");
             originalRequest.headers["Authorization"] = `Bearer ${token}`;
             return this.axiosInstance.request(originalRequest);
           } catch (error) {
             // Refresh token expired, handle the error
-            window.location.href = "/login";
+            // window.location.href = "/";
             throw new Error(
               `API request failed, Refresh token expired: ${error}`,
             );
@@ -43,14 +43,20 @@ export class AxiosClient {
   }
 
   private async refreshToken() {
-    const res = await this.axiosInstance.get("/auth/refresh-token", {
-      headers: {
-        Authorization: `Bearer ${this.token}`,
-      },
-    });
-    this.token = res.data.token;
-    console.log("🔐 token refreshed");
-    return this.token;
+    try {
+      const res = await this.axiosInstance.get("/auth/refresh-token", {
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+        },
+      });
+      this.accessToken = res.data?.data?.accessToken;
+      console.log("🔐 token refreshed");
+      return this.accessToken;
+    } catch (error) {
+      // if the refresh token fails, log out the user
+      useUserStore.getState().logout();
+      throw new Error(`API request failed, Refresh token expired: ${error}`);
+    }
   }
 
   // Generic request handler
@@ -66,7 +72,7 @@ export class AxiosClient {
         url,
         data,
         headers: {
-          Authorization: `Bearer ${this.token}`,
+          Authorization: `Bearer ${this.accessToken}`,
         },
       });
 

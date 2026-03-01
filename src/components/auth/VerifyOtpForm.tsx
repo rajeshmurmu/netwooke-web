@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { Clock } from 'lucide-react';
-import { authClient } from '@/services/authClient';
+import { authClient } from '@/services/authService';
 import { AxiosError } from 'axios';
 import { isBrowser } from '@/utils';
 import toast from 'react-hot-toast';

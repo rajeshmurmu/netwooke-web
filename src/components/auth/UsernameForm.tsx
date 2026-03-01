@@ -4,7 +4,7 @@ import { User } from "lucide-react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { useState } from "react";
-import { authClient } from "@/services/authClient";
+import { authClient } from "@/services/authService";
 import toast from "react-hot-toast";
 
 export default function UsernameForm() {

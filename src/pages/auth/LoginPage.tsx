@@ -8,7 +8,7 @@ import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router";
 import useUserStore from "@/store/userStore";
-import { authClient } from "@/services/authClient";
+import { authClient } from "@/services/authService";
 import toast from "react-hot-toast";
 import { AxiosError } from "axios";
 import { isBrowser } from "@/utils";
@@ -38,11 +38,9 @@ export default function LoginPage() {
             setLoading(true);
 
             const res = await authClient.login(inputData);
-            const data = res?.data !== undefined ? res?.data : res;
-            if (data?.success) {
-                toast.success(data?.message || "User logged in successfully");
-                login(data?.data?.user, data?.data?.accessToken);
-            }
+            toast.success(res.data?.message || "User logged in successfully");
+            login(res.data?.user, res.data?.accessToken);
+
         } catch (err) {
             if (err instanceof AxiosError) {
                 if (err?.response)

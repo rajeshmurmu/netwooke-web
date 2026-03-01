@@ -1,7 +1,7 @@
 import { createContext, useContext, useState } from "react";
 import Loader from "../components/Loader";
 import { isBrowser, LocalStorage } from "../utils";
-import { authClient } from "../services/authClient";
+import { authClient } from "../services/authService";
 import toast from "react-hot-toast";
 import { AxiosError } from "axios";
 import type { RegisterInput } from "@/lib/zod/authSchema";

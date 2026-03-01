@@ -8,7 +8,7 @@ import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema, type RegisterInput } from '@/lib/zod/authSchema'
 import type { PasswordRequirements } from '@/interfaces/auth'
-import { authClient } from '@/services/authClient'
+import { authClient } from '@/services/authService'
 import toast from 'react-hot-toast'
 import { AxiosError } from 'axios'
 import { isBrowser } from '@/utils'

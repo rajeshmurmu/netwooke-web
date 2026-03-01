@@ -1,6 +1,6 @@
 
+import { genaiClient } from '@/services/genaiClient';
 import React, { useState, useEffect } from 'react';
-import { generateReflectionPrompt } from '../services/geminiService';
 
 const Dairy: React.FC = () => {
     const [prompt, setPrompt] = useState('What are you grateful for today?');
@@ -17,8 +17,8 @@ const Dairy: React.FC = () => {
 
     const refreshPrompt = async () => {
         setLoadingPrompt(true);
-        const p = await generateReflectionPrompt();
-        setPrompt(p);
+        const res = await genaiClient.generateReflectionPrompt();
+        setPrompt(res.data.prompt);
         setLoadingPrompt(false);
     };
 

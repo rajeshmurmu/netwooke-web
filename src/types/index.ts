@@ -12,10 +12,12 @@ export interface User {
   role: keyof typeof UserRole;
   bio: string;
   goals: Goal[];
-  createdAt: string;
-  badges: Badge[];
-  isMentor?: boolean;
-  specialization?: string;
+  isVerified: boolean;
+  status: "active" | "inactive";
+  isMentor: boolean;
+  isDeleted: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface Goal {
@@ -32,7 +34,11 @@ export interface Badge {
   icon: string;
 }
 
-export type MediaType = "text" | "video" | "audio";
+export type MediaType = {
+  url?: string;
+  public_id?: string;
+  mediaType?: "audio" | "video" | "image" | "none";
+};
 
 export interface Comment {
   id: string;
@@ -43,20 +49,17 @@ export interface Comment {
 }
 
 export interface Post {
-  id: string;
+  _id: string;
   userId: string;
-  authorUsername: string;
-  authorName: string;
-  authorAvatar: string;
-  isMentor?: boolean;
   content: string;
-  mediaType: MediaType;
-  mediaUrl?: string;
-  timestamp: string;
-  encouragements: number;
+  media: MediaType;
+  visibility: "public" | "group" | "private";
   tags: string[];
-  groupId?: string;
-  comments?: Comment[];
+  encouragements: number;
+  comments: Comment[];
+  createdAt: Date;
+  updatedAt: Date;
+  postBy: User;
 }
 
 export interface DiaryEntry {

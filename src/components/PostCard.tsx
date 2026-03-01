@@ -2,15 +2,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router';
 import type { Post, Comment } from '../types';
-import { moderateContent } from '../services/geminiService';
+
 import { Card } from './ui/card';
+import { genaiClient } from '@/services/genaiClient';
+import moment from 'moment';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 interface PostCardProps {
     post: Post;
 }
 
 const PostCard: React.FC<PostCardProps> = ({ post }) => {
-    const [count, setCount] = useState(post.encouragements);
+    const [count, setCount] = useState(post.encouragements || 0);
     const [encouraged, setEncouraged] = useState(false);
     const [showShareModal, setShowShareModal] = useState(false);
     const [copySuccess, setCopySuccess] = useState(false);
@@ -38,9 +41,9 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
     // Thumbnail generation logic
     useEffect(() => {
-        if (post.mediaType === 'video' && post.mediaUrl && !videoThumbnail) {
+        if (post.media?.mediaType === 'video' && post.media?.mediaType && !videoThumbnail) {
             const video = document.createElement('video');
-            video.src = post.mediaUrl;
+            video.src = post.media?.url || "";
             video.crossOrigin = 'anonymous';
             video.muted = true;
             video.playsInline = true;
@@ -60,7 +63,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                 }
             };
         }
-    }, [post.mediaUrl, post.mediaType, videoThumbnail]);
+    }, [videoThumbnail, post.media?.mediaType, post.media?.url]);
 
     const handleEncourage = () => {
         if (encouraged) {
@@ -72,7 +75,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
     };
 
     const handleCopyLink = () => {
-        const link = `${window.location.origin}/#/post/${post.id}`;
+        const link = `${window.location.origin}/#/post/${post._id}`;
         navigator.clipboard.writeText(link);
         setCopySuccess(true);
         setTimeout(() => setCopySuccess(false), 2000);
@@ -83,10 +86,10 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
         if (!newComment.trim()) return;
 
         setIsSubmittingComment(true);
-        const moderation = await moderateContent(newComment);
+        const res = await genaiClient.moderateContent(newComment);
 
-        if (!moderation.isSafe) {
-            alert(`Network Tube is a safe space. Please refine your wisdom: ${moderation.reason}`);
+        if (!res.data.isSafe) {
+            alert(`Network Tube is a safe space. Please refine your wisdom: ${res.data.reason}`);
             setIsSubmittingComment(false);
             return;
         }
@@ -116,8 +119,8 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
         }
     };
 
-    const postLink = `${window.location.origin}/#/post/${post.id}`;
-    const postText = `Check out this growth story on Network Tube: "${post.content.substring(0, 100)}${post.content.length > 100 ? '...' : ''}"`;
+    const postLink = `${window.location.origin}/#/post/${post._id}`;
+    const postText = `Check out this growth story on Netwooke: "${post.content.substring(0, 100)}${post.content.length > 100 ? '...' : ''}"`;
     const shareContent = `${postText} ${postLink}`;
 
     const handleOptionClick = (action: string) => {
@@ -129,9 +132,15 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
         <Card className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 transition-all hover:border-blue-100 group relative">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                    <Link to={`/profile/${post.authorUsername}`} className="relative group/avatar shrink-0">
-                        <img src={post.authorAvatar} className="w-12 h-12 rounded-2xl bg-slate-200 border-2 border-white shadow-sm transition-transform group-hover/avatar:scale-105" alt={post.authorName} />
-                        {post.isMentor && (
+                    <Link to={`/profile/@${post.postBy.username}`} className="relative group/avatar shrink-0">
+                        {/* <img src={post.postBy.avatar} className="w-12 h-12 rounded-2xl bg-slate-200 border-2 border-white shadow-sm transition-transform group-hover/avatar:scale-105" alt={post.postBy.name} /> */}
+                        <Avatar className="w-10 h-10">
+                            <AvatarImage src={post.postBy?.avatar} />
+                            <AvatarFallback className="bg-primary/20 text-primary font-semibold">
+                                {post.postBy?.name?.[0].toUpperCase()}
+                            </AvatarFallback>
+                        </Avatar>
+                        {post.postBy.isMentor && (
                             <div className="absolute -top-1 -right-1 bg-amber-400 text-white rounded-full p-1 shadow-sm" title="Growth Mentor">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m12 15 2 2 4-4" /><rect width="18" height="18" x="3" y="3" rx="2" /></svg>
                             </div>
@@ -139,9 +148,9 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                     </Link>
                     <div>
                         <div className="flex items-center gap-2">
-                            <Link to={`/profile/${post.authorUsername}`} className="font-bold text-slate-800 leading-tight flex items-center gap-1.5 hover:text-blue-600 transition-colors">
-                                {post.authorName}
-                                {post.isMentor && <span className="text-[10px] bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded uppercase tracking-wider font-extrabold">Mentor</span>}
+                            <Link to={`/profile/${post.postBy.username}`} className="font-bold text-slate-800 leading-tight flex items-center gap-1.5 hover:text-blue-600 transition-colors">
+                                {post.postBy.name}
+                                {post.postBy.isMentor && <span className="text-[10px] bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded uppercase tracking-wider font-extrabold">Mentor</span>}
                             </Link>
                             <button
                                 onClick={() => setIsFollowing(!isFollowing)}
@@ -153,7 +162,8 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                                 {isFollowing ? 'Following' : 'Follow'}
                             </button>
                         </div>
-                        <span className="text-[11px] text-slate-400 font-medium">{post.timestamp}</span>
+                        {/* <span className="text-[11px] text-slate-400 font-medium">{new Date(post.createdAt).getTime() - new Date().getTime() > 0 ? 'Just now' : new Date(post.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span> */}
+                        <span className="text-[11px] text-slate-400 font-medium">{new Date(post.createdAt).getTime() - new Date().getTime() < 0 ? `Published ${moment(new Date(post.createdAt)).fromNow()}` : `Published ${moment(new Date(post.createdAt)).fromNow()}`}</span>
                     </div>
                 </div>
 
@@ -190,18 +200,18 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                 {post.content}
             </p>
 
-            {post.mediaType === 'video' && post.mediaUrl && (
+            {post.media?.mediaType === 'video' && post.media?.url && (
                 <div className="rounded-2xl overflow-hidden mb-4 border border-slate-100 bg-black aspect-video relative group/video">
                     <video
                         ref={videoRef}
-                        src={post.mediaUrl}
+                        src={post.media?.url}
                         controls
                         playsInline
                         className="w-full h-full object-contain"
                         poster={videoThumbnail || undefined}
                         onPlay={() => setIsPlaying(true)}
                         onPause={() => setIsPlaying(false)}
-                        aria-label={`Growth milestone video by ${post.authorName}`}
+                        aria-label={`Growth milestone video by ${post.postBy.name}`}
                     />
                     {!isPlaying && (
                         <button
@@ -220,16 +230,16 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                 </div>
             )}
 
-            {post.mediaType === 'audio' && post.mediaUrl && (
+            {post.media?.mediaType === 'audio' && post.media?.url && (
                 <div className="bg-slate-50 rounded-2xl p-4 mb-4 flex items-center gap-4 border border-slate-100">
                     <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white shrink-0 shadow-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14" /></svg>
                     </div>
-                    <audio src={post.mediaUrl} controls className="flex-1 h-8 opacity-90" aria-label={`Growth reflection audio by ${post.authorName}`} />
+                    <audio src={post.media?.url} controls className="flex-1 h-8 opacity-90" aria-label={`Growth reflection audio by ${post.postBy.name}`} />
                 </div>
             )}
 
-            {post.tags && (
+            {post.tags?.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-4">
                     {post.tags.map(tag => (
                         <span key={tag} className="text-[10px] uppercase tracking-widest font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded">#{tag}</span>

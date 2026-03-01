@@ -11,6 +11,7 @@ interface userActions {
   login: (user: User, accessToken: string) => void;
   // register: (user: User) => void;
   logout: () => void;
+  setAccessToken: (accessToken: string) => void;
 }
 
 type UserStore = AuthState & userActions;
@@ -23,6 +24,7 @@ const userStore: StateCreator<
   accessToken: null,
   login: (user: User, accessToken: string) => set({ user, accessToken }),
   logout: () => set({ user: null, accessToken: null }),
+  setAccessToken: (accessToken: string) => set({ accessToken }),
 });
 
 const useUserStore = create<UserStore>()(
