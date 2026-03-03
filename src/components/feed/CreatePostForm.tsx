@@ -10,7 +10,7 @@ export const MediaType = {
 } as const
 
 export default function CreatePostForm() {
-    const { createPost } = useCreatePost();
+    const { createPost, error: modeRationError } = useCreatePost();
     const [newPost, setNewPost] = useState('');
     const [mediaType, setMediaType] = useState<typeof MediaType[keyof typeof MediaType]>('none');
     const [mediaFile, setMediaFile] = useState<File | null>(null);
@@ -135,6 +135,15 @@ export default function CreatePostForm() {
         }
     };
 
+
+    useEffect(() => {
+        if (modeRationError?.message.startsWith("modeRationError:")) {
+            const errorMessage = modeRationError?.message.replace("modeRationError:", "");
+            setError(errorMessage || "Your content was flagged by our moderation system. Please refine your wisdom and try again.");
+            return;
+
+        }
+    }, [modeRationError])
 
     return (
         <div className="bg-white rounded-3xl shadow-sm p-5 border border-slate-200">

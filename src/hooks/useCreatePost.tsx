@@ -14,8 +14,12 @@ export default function useCreatePost() {
         },
 
         onError: (error) => {
-            console.log(error)
-            toast.error(error.message || "Something went wrong")
+            if (error.message.startsWith("modeRationError:")) {
+                toast.error("Network Tube is a safe space. Please refine your wisdom.");
+                return;
+
+            }
+            toast.error("An error occurred while creating the post")
         }
     })
 
