@@ -10,9 +10,9 @@ export const usePosts = () => {
     return {
         posts: data?.data?.posts as Post[],
         meta: data?.meta,
-        isError,
-        isLoading,
-        refetch,
-        error
+        postIsErorr: isError,
+        postLoading: isLoading,
+        postRefetch: refetch,
+        postError: error
     }
 }

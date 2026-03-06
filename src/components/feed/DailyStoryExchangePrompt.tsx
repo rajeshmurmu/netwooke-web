@@ -1,19 +1,9 @@
-import { genaiClient } from '@/services/genaiClient';
-import { useEffect, useState } from 'react'
+import useReflectionPrompt from '@/hooks/useReflectionPrompt';
 
 export default function DailyStoryExchangePrompt() {
-    const [storyPrompt, setStoryPrompt] = useState('How did you face discomfort today?');
-
-    useEffect(() => {
-        const fetchPrompt = async () => {
-            const res = await genaiClient.generateReflectionPrompt();
-            if (res.status === 200) {
-                const prompt = res.data?.data?.reflectionPrompt;
-                setStoryPrompt(prompt);
-            }
-        };
-        fetchPrompt();
-    }, []);
+    const { reflectionPrompt } = useReflectionPrompt();
+    const defaultPrompt = 'How did you face discomfort today?';
+    const storyPrompt = reflectionPrompt || defaultPrompt;
 
     return (
         <div className="bg-linear-to-r from-blue-600 to-indigo-700 rounded-3xl p-6 text-white shadow-xl shadow-blue-100 mb-8 overflow-hidden relative">

@@ -3,9 +3,9 @@ import { usePosts } from '@/hooks/usePosts';
 import { PostFeedSkeleton } from '../skeleton/PostFeedSkeleton';
 
 export default function GrowthStreamPosts() {
-    const { posts, isLoading } = usePosts();
+    const { posts, postLoading } = usePosts();
 
-    if (isLoading) {
+    if (postLoading) {
         return (
             <PostFeedSkeleton />
         )
