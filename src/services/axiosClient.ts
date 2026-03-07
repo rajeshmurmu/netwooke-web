@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import useUserStore from "@/store/userStore";
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, type AxiosRequestConfig } from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
 
@@ -92,22 +93,44 @@ export class AxiosClient {
 
   // Generic request handler
   protected async request<T>(
-    method: "get" | "post" | "put" | "delete",
+    method: AxiosRequestConfig["method"],
     url: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data?: any,
+    config?: AxiosRequestConfig,
   ): Promise<T> {
-    try {
-      const response = await this.axiosInstance.request<T>({
-        method,
-        url,
-        data,
-      });
+    const response = await this.axiosInstance.request<T>({
+      method,
+      url,
+      data,
+      ...config,
+    });
+    return response.data;
+  }
 
-      return response.data;
-    } catch (error) {
-      throw new Error(`API request failed: ${error}`);
-    }
+  // Helper methods for common HTTP verbs
+  public async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    const { data } = await this.axiosInstance.get(url, config);
+    return data;
+  }
+
+  public async post<T>(url: string, body: any,config?: AxiosRequestConfig): Promise<T> {
+    const { data } = await this.axiosInstance.post(url, body,config);
+    return data;
+  }
+
+  public async put<T>(url: string, body: any,config?: AxiosRequestConfig): Promise<T> {
+    const { data } = await this.axiosInstance.put(url, body,config);
+    return data;
+  }
+
+  public async delete<T>(url: string,config?: AxiosRequestConfig): Promise<T> {
+    const { data } = await this.axiosInstance.delete(url,config);
+    return data;
+  }
+
+  public async patch<T>(url: string, body: any,config?: AxiosRequestConfig): Promise<T> {
+    const { data } = await this.axiosInstance.patch(url, body,config);
+    return data;
   }
 }
 
