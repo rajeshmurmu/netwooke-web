@@ -89,7 +89,7 @@ const Profile = () => {
                     <div className="grid gap-6">
                         {displayedUser?.goals && displayedUser?.goals?.length > 0 ? (
                             displayedUser.goals.map(goal => (
-                                <div key={goal.id} className="p-6 rounded-3xl bg-slate-50 border border-slate-100 group transition-all hover:bg-white hover:shadow-lg hover:shadow-slate-100 hover:border-blue-100">
+                                <div key={goal._id} className="p-6 rounded-3xl bg-slate-50 border border-slate-100 group transition-all hover:bg-white hover:shadow-lg hover:shadow-slate-100 hover:border-blue-100">
                                     <div className="flex items-center justify-between mb-4">
                                         <div className="flex items-center gap-4">
                                             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-sm ${goal.completed ? 'bg-green-100 text-green-600' : 'bg-blue-600 text-white'}`}>
@@ -127,7 +127,7 @@ const Profile = () => {
                         <h3 className="text-xl font-black text-slate-800 mb-6 tracking-tight uppercase">Identity Badges</h3>
                         <div className="grid grid-cols-2 gap-4">
                             {displayedUser?.badges && displayedUser?.badges.map(badge => (
-                                <div key={badge.id} className="flex flex-col items-center p-6 rounded-3xl bg-linear-to-b from-slate-50 to-white border border-slate-100 text-center transition-transform hover:scale-105 cursor-pointer">
+                                <div key={badge._id} className="flex flex-col items-center p-6 rounded-3xl bg-linear-to-b from-slate-50 to-white border border-slate-100 text-center transition-transform hover:scale-105 cursor-pointer">
                                     <span className="text-4xl mb-3 filter drop-shadow-sm">{badge.icon}</span>
                                     <span className="text-[11px] font-black text-slate-700 uppercase leading-tight">{badge.name}</span>
                                 </div>

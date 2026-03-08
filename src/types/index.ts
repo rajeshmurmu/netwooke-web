@@ -18,10 +18,11 @@ export interface User {
   isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
+  badges: Badge[];
 }
 
 export interface Goal {
-  id: string;
+  _id: string;
   title: string;
   completed: boolean;
   category: "fitness" | "mindset" | "career" | "discipline" | "study";
@@ -29,7 +30,7 @@ export interface Goal {
 }
 
 export interface Badge {
-  id: string;
+  _id: string;
   name: string;
   icon: string;
 }

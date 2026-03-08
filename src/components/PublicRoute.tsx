@@ -1,13 +1,13 @@
 // Import necessary libraries and types
 import type { ReactNode } from "react";
 import { Navigate } from "react-router";
-import { useAuth } from "../context/AuthContext";
+import useUserStore from "@/store/userStore";
 
 
 
 export default function PublicRoute({ children }: { children: ReactNode }) {
     // Destructure token and user details from the authentication context
-    const { token, user } = useAuth();
+    const { accessToken: token, user } = useUserStore();
 
     // If there's a token or user ID, redirect to the chat page
     if (token || user?._id) return <Navigate to="/feed" replace />;

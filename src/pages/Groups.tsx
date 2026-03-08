@@ -19,7 +19,7 @@ const Groups: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {MOCK_GROUPS.map(group => (
-                    <div key={group.id} className="bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+                    <div key={group._id} className="bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-md transition-shadow flex flex-col">
                         <img src={group.coverImage} className="h-40 w-full object-cover" alt={group.name} />
                         <div className="p-6 flex-1 flex flex-col">
                             <div className="flex justify-between items-start mb-2">
