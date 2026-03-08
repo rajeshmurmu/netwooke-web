@@ -1,44 +1,45 @@
 
-import { genaiClient } from '@/services/genaiClient';
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
+import useDairyEntry from '@/hooks/useDairyEntry';
+import useDairyEntryMutation from '@/hooks/useDairyEntryMutation';
+import useReflectionPrompt from '@/hooks/useReflectionPrompt';
+import type { DairyEntryResponse } from '@/types';
+import LoaderNew from '@/components/LoaderNew';
+import DiaryEntryCard from '@/components/dairy/DairyCard';
+import { useSearchParams } from 'react-router';
 
-const Dairy: React.FC = () => {
-    const [prompt, setPrompt] = useState('What are you grateful for today?');
-    const [loadingPrompt, setLoadingPrompt] = useState(false);
-    const [entries, setEntries] = useState([
-        { id: 'd1', title: 'Focus and Discipline', content: 'Today I woke up at 5:30. The morning air was cold but the run felt incredible. Mental clarity is high.', timestamp: 'Yesterday', isPublic: false },
-        { id: 'd2', title: 'Overcoming Setbacks', content: 'Had a tough talk at work today. Instead of reacting emotionally, I took 5 breaths and responded with logic. Growth.', timestamp: '3 days ago', isPublic: true }
-    ]);
+export default function Dairy() {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const {
+        reflectionPrompt,
+        reflectionPromptIsFetching,
+        reflectionPromptRefetch: refreshPrompt
+    } = useReflectionPrompt();
+    const { createEntry, EntryIsPending } = useDairyEntryMutation();
+    const { dairyEnteries, dairyEntriesIsLoading } = useDairyEntry();
+
+
+    const prompt = reflectionPrompt || 'What are you grateful for today?';
     const [newTitle, setNewTitle] = useState('');
     const [newContent, setNewContent] = useState('');
     const [isPublic, setIsPublic] = useState(false);
 
+    const activeTab = searchParams.get('q') === 'community' ? 'community' : 'personal'; // Default to 'personal' if no valid tab is provided
+    const handleSave = async () => {
+        try {
+            createEntry({
+                title: newTitle,
+                content: newContent,
+                isPrivate: !isPublic
+            });
 
-
-    const refreshPrompt = async () => {
-        setLoadingPrompt(true);
-        const res = await genaiClient.generateReflectionPrompt();
-        setPrompt(res.data.prompt);
-        setLoadingPrompt(false);
+        } catch (error) {
+            console.error("Error saving entry:", error);
+        } finally {
+            setNewTitle('');
+            setNewContent('');
+        }
     };
-
-    const handleSave = () => {
-        if (!newContent) return;
-        const entry = {
-            id: Date.now().toString(),
-            title: newTitle || 'Untitled Reflection',
-            content: newContent,
-            timestamp: 'Just now',
-            isPublic
-        };
-        setEntries([entry, ...entries]);
-        setNewTitle('');
-        setNewContent('');
-    };
-
-    useEffect(() => {
-        refreshPrompt();
-    }, []);
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-20">
@@ -47,11 +48,11 @@ const Dairy: React.FC = () => {
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-bold text-slate-800">New Reflection</h2>
                         <button
-                            onClick={refreshPrompt}
-                            disabled={loadingPrompt}
+                            onClick={() => refreshPrompt()}
+                            disabled={reflectionPromptIsFetching}
                             className="text-blue-600 text-sm hover:underline"
                         >
-                            {loadingPrompt ? 'Getting prompt...' : 'New Prompt'}
+                            {reflectionPromptIsFetching ? 'Getting prompt...' : 'New Prompt'}
                         </button>
                     </div>
 
@@ -85,6 +86,7 @@ const Dairy: React.FC = () => {
                         </label>
                         <button
                             onClick={handleSave}
+                            disabled={!newTitle || !newContent || EntryIsPending}
                             className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-xl text-sm font-semibold shadow-md shadow-blue-100"
                         >
                             Save Entry
@@ -93,19 +95,56 @@ const Dairy: React.FC = () => {
                 </div>
 
                 <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-slate-800">Previous Entries</h3>
-                    {entries.map(entry => (
-                        <div key={entry.id} className="bg-white p-5 rounded-2xl border border-slate-100 hover:border-slate-200 shadow-sm transition-colors">
-                            <div className="flex justify-between items-start mb-2">
-                                <h4 className="font-bold text-slate-800">{entry.title}</h4>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[10px] text-slate-400 uppercase tracking-widest">{entry.timestamp}</span>
-                                    {entry.isPublic && <span className="bg-green-50 text-green-600 text-[9px] px-2 py-0.5 rounded-full font-bold">PUBLIC</span>}
-                                </div>
-                            </div>
-                            <p className="text-slate-600 text-sm line-clamp-3">{entry.content}</p>
+                    <div className="flex items-center justify-between border-b border-slate-200">
+                        <div className="flex gap-6">
+                            <button
+                                onClick={() => setSearchParams({ q: 'personal' })}
+                                className={`pb-2 text-sm font-bold transition-colors relative ${activeTab === 'personal' ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'
+                                    }`}
+                            >
+                                My Reflections
+                                {activeTab === 'personal' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full" />}
+                            </button>
+                            <button
+                                onClick={() => setSearchParams({ q: 'community' })}
+                                className={`pb-2 text-sm font-bold transition-colors relative ${activeTab === 'community' ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'
+                                    }`}
+                            >
+                                Community
+                                {activeTab === 'community' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full" />}
+                            </button>
                         </div>
-                    ))}
+                    </div>
+
+                    {
+                        dairyEntriesIsLoading ? (
+                            <LoaderNew className="h-60" />
+                        ) : (
+                            <div className="space-y-4">
+                                {activeTab === 'personal' ? (
+                                    dairyEnteries?.length > 0 ? (
+                                        dairyEnteries.map((entry: DairyEntryResponse) => (
+                                            <DiaryEntryCard key={entry._id} entry={entry} />
+                                        ))
+                                    ) : (
+                                        <div className="bg-white p-8 rounded-2xl border border-slate-100 text-center">
+                                            <p className="text-slate-500">No reflections yet. Start your journey today.</p>
+                                        </div>
+                                    )
+                                ) : (
+                                    dairyEnteries?.length > 0 ? (
+                                        dairyEnteries.map((entry: DairyEntryResponse) => (
+                                            <DiaryEntryCard key={entry._id} entry={entry} isCommunity />
+                                        ))
+                                    ) : (
+                                        <div className="bg-white p-8 rounded-2xl border border-slate-100 text-center">
+                                            <p className="text-slate-500">No community reflections shared yet.</p>
+                                        </div>
+                                    )
+                                )}
+                            </div>
+                        )
+                    }
                 </div>
             </div>
 
@@ -133,4 +172,3 @@ const Dairy: React.FC = () => {
     );
 };
 
-export default Dairy;

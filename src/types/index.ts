@@ -62,15 +62,21 @@ export interface Post {
   postBy: User;
 }
 
-export interface DiaryEntry {
-  id: string;
-  userId: string;
+export type DairyEntryInput = {
   title: string;
   content: string;
-  isPublic: boolean;
-  timestamp: string;
-  mood?: string;
-}
+  isPrivate: boolean;
+};
+
+export type DairyEntryResponse = DairyEntryInput & {
+  _id: string;
+  userId: string;
+  createdAt: Date;
+  user?: {
+    name: string;
+    avatar: string;
+  };
+};
 
 export interface Group {
   id: string;
